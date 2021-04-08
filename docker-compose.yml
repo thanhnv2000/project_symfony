@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+    mongodb:
+        build:
+            context: ./docker/mongo
+            dockerfile: Dockerfile
+            args:
+                - mongodb_username=${MONGODB_USERNAME}
+                - mongodb_password=${MONGODB_PASSWORD}
+                - mongodb_initdb_database=${MONGO_INITDB_DATABASE}
+        volumes:
+            - ./.data/mongo:/data/db:rw
+        env_file:
+            - .env
+        ports:
+            - "27018:27017"
+        networks:
+           - symfony
+
+    php:
+        build:
+            context: ./docker/php
+            dockerfile: Dockerfile
+
+        volumes:
+            - ./symfony/:/var/www/symfony/
+            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+            
+        links: 
+            - mongodb
+            
+        ports:
+        - "9000:9000"
+
+        networks:
+            - symfony
+
+
+    nginx:
+        build:
+            context: .
+            dockerfile: docker/nginx/Dockerfile
+        volumes:
+            - ./symfony/:/var/www/symfony/
+        ports:
+            - "8080:80"
+        networks:
+            - symfony
+
+volumes:
+    db_app:
+
+networks:
+    symfony:
